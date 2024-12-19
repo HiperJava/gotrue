@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"net/http/httptrace"
 	"net/url"
+	"os"
 	"time"
 
 	"github.com/gobuffalo/uuid"
@@ -33,7 +34,10 @@ const (
 	ValidateEvent       = "validate"
 	SignupEvent         = "signup"
 	LoginEvent          = "login"
+	apiHeader           = "X-API-KEY"
 )
+
+var webhookSecret = []byte(os.Getenv("GOTRUE_WEBHOOK_SECRET"))
 
 var defaultTimeout = time.Second * 5
 
@@ -87,6 +91,7 @@ func (w *Webhook) trigger() (io.ReadCloser, error) {
 			return nil, internalServerError("Failed to make request object").WithInternalError(err)
 		}
 		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set(apiHeader, string(webhookSecret))
 		watcher, req := watchForConnection(req)
 
 		if w.jwtSecret != "" {
